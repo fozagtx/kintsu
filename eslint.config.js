@@ -3,7 +3,12 @@
 // Locked rules only tighten: ratchet verify blocks if one is removed.
 
 // ratchet:rules:begin
-const ratchetRules = [];
+const ratchetRules = [
+  {
+    "selector": "CallExpression[callee.object.property.name='classList'][callee.property.name=/^(add|toggle)$/] > Literal[value=/disabled/]",
+    "message": "[bug-20261117-155802-signup-terms] Do not fake a disabled control by toggling a 'disabled' CSS class: it still fires. Set element.disabled instead. Evidence: .ratchet/evidence/bug-20261117-155802-signup-terms.evidence"
+  }
+];
 // ratchet:rules:end
 
 export default [
