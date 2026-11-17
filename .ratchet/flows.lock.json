@@ -3,5 +3,10 @@
     "objective": "ca324911b11ad21785f2b4c548f3b4b3f101de1e426a56b213e3a7e211c3a9b3",
     "test": "1179cc6a9c250e69963253b6a007f20d14188324d53bb06eb0b462492b827e3c",
     "mode": "testing"
+  },
+  "signup-terms": {
+    "objective": "ebcf2a10e6856b9f3f77efcdcb2d0c6de7537727fa872b717f4ae2b190b1d83c",
+    "test": "92cacaea45d92268903726c184c1db6e4a637a191ff20c8500ea6e85c93f24ed",
+    "mode": "testing"
   }
 }
