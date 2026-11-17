@@ -1,0 +1,6 @@
+node_modules
+.ratchet/state/
+.testmuai/evidence/
+.testmuai/kaneai/
+.DS_Store
+.testmuai/tests/output-*/
