@@ -1,7 +1,10 @@
 {
   "app": {
     "url": "http://localhost:4310",
-    "serve": ["node", "demo-app/server.js"],
+    "serve": [
+      "node",
+      "demo-app/server.js"
+    ],
     "readyPath": "/health"
   },
   "flows": [
@@ -9,13 +12,17 @@
       "name": "signup",
       "objective": "Open the signup page. Enter Ada Lovelace as the full name and ada@example.com as the work email, choose the Pro plan, tick the terms checkbox, click Create account, and verify the welcome message says Ada Lovelace is on the Pro plan.",
       "test": ".testmuai/tests/signup_test.md",
-      "paths": ["demo-app/"]
+      "paths": [
+        "demo-app/"
+      ]
     },
     {
       "name": "signup-terms",
-      "objective": "Open the signup page. Enter Ada Lovelace as the full name and ada@example.com as the work email and leave the terms checkbox unticked. Verify the Create account button is disabled, try to click it, and verify no welcome message appears.",
+      "objective": "Open the signup page. Enter Ada Lovelace as the full name and ada@example.com as the work email and leave the terms checkbox unticked. Verify the Create account button is disabled and no welcome message is shown.",
       "test": ".testmuai/tests/signup-terms_test.md",
-      "paths": ["demo-app/"]
+      "paths": [
+        "demo-app/"
+      ]
     }
   ],
   "handlers": [
@@ -26,7 +33,9 @@
     }
   ],
   "lint": {
-    "files": ["demo-app/public"]
+    "files": [
+      "demo-app/public"
+    ]
   },
   "maxCycles": 3,
   "kaneTimeout": 300

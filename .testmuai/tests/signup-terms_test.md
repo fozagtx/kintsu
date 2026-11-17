@@ -27,4 +27,4 @@ local_context: >-
 # Session: signup-terms
 
 ## Step 1
-Open the signup page. Enter Ada Lovelace as the full name and ada@example.com as the work email and leave the terms checkbox unticked. Verify the Create account button is disabled, try to click it, and verify no welcome message appears.
+Open the signup page. Enter Ada Lovelace as the full name and ada@example.com as the work email and leave the terms checkbox unticked. Verify the Create account button is disabled and no welcome message is shown.
