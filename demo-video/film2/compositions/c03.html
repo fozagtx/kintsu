@@ -16,8 +16,8 @@
 </style>
   <div id="root" data-composition-id="c03" data-width="1920" data-height="1080">
     <div id="c03-all" style="position:absolute;inset:0">
-<div id="c03-p0" class="frame"><div id="c03-p0-cam" class="cam"><img class="media" src="assets/img/g0.png" alt="Links between agents" /></div></div>
-<div id="c03-cap" class="cap"><span class="w">But</span><span class="w">no</span><span class="w">one</span><span class="w">tests</span><span class="w">what</span><span class="w">happens</span><span class="w">when</span><span class="w">a</span><span class="w">customer</span><span class="w">uses</span><span class="w">two</span><span class="w">features</span><span class="w red">together</span></div>
+<div id="c03-p0" class="frame"><div id="c03-p0-cam" class="cam"><img class="media" src="assets/img/kane-shop.jpg" alt="The demo shop catalog" /></div></div>
+<div id="c03-cap" class="cap"><span class="w">As</span><span class="w">an</span><span class="w">example,</span><span class="w">we</span><span class="w">built</span><span class="w">a</span><span class="w">shop</span><span class="w">where</span><span class="w">each</span><span class="w">feature</span><span class="w">has</span><span class="w">its</span><span class="w gold">own</span><span class="w">agent</span></div>
 
     </div>
   </div>
@@ -25,11 +25,11 @@
     (function () {
       const tl = gsap.timeline({ paused: true });
       tl.fromTo("#c03-p0", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5, ease: "expo.out" }, 0);
-tl.fromTo("#c03-p0-cam", { scale: 1.6, x: -211.2, y: -239.3, transformOrigin: "0 0" }, { ...{ scale: 1.6, x: -211.2, y: -239.3, transformOrigin: "0 0" }, duration: 0.01 }, 0);
-tl.to("#c03-p0-cam", { ...{ scale: 2.0, x: -896.2, y: -394.1, transformOrigin: "0 0" }, duration: 1.4, ease: "power2.inOut" }, 0.6);
+tl.fromTo("#c03-p0-cam", { scale: 1, x: 0.0, y: 0.0, transformOrigin: "0 0" }, { ...{ scale: 1, x: 0.0, y: 0.0, transformOrigin: "0 0" }, duration: 0.01 }, 0);
+tl.to("#c03-p0-cam", { ...{ scale: 1.7, x: -587.9, y: -14.8, transformOrigin: "0 0" }, duration: 1.4, ease: "power2.inOut" }, 0.6);
 tl.fromTo("#c03-cap .w", { opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.22, stagger: 0.07, ease: "power3.out" }, 0.5);
 
-tl.to("#c03-all", { opacity: 0, filter: "blur(8px)", duration: 0.18, ease: "power2.in" }, 7.30);
+tl.to("#c03-all", { opacity: 0, filter: "blur(8px)", duration: 0.18, ease: "power2.in" }, 10.80);
       window.__timelines["c03"] = tl;
     })();
   </script>

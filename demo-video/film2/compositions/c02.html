@@ -16,8 +16,8 @@
 </style>
   <div id="root" data-composition-id="c02" data-width="1920" data-height="1080">
     <div id="c02-all" style="position:absolute;inset:0">
-<div id="c02-p0" class="frame"><div id="c02-p0-cam" class="cam"><img class="media" src="assets/img/g0.png" alt="Agents" /></div></div>
-<div id="c02-cap" class="cap"><span class="w">Each</span><span class="w">feature</span><span class="w">works</span><span class="w">when</span><span class="w">it</span><span class="w">is</span><span class="w">tested</span><span class="w">on</span><span class="w">its</span><span class="w">own</span></div>
+<div id="c02-p0" class="frame"><div id="c02-p0-cam" class="cam"><img class="media" src="assets/img/g0.png" alt="Kintsu graph of five agents" /></div></div>
+<div id="c02-cap" class="cap"><span class="w">Agents</span><span class="w">build</span><span class="w">features</span><span class="w">fast,</span><span class="w">but</span><span class="w">testing</span><span class="w">has</span><span class="w">not</span><span class="w">kept</span><span class="w red">up</span></div>
 
     </div>
   </div>
@@ -25,10 +25,11 @@
     (function () {
       const tl = gsap.timeline({ paused: true });
       tl.fromTo("#c02-p0", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5, ease: "expo.out" }, 0);
-tl.fromTo("#c02-p0-cam", { scale: 1.6, x: -211.2, y: -239.3, transformOrigin: "0 0" }, { ...{ scale: 1.6, x: -211.2, y: -239.3, transformOrigin: "0 0" }, duration: 0.01 }, 0);
+tl.fromTo("#c02-p0-cam", { scale: 1.15, x: -125.9, y: -65.1, transformOrigin: "0 0" }, { ...{ scale: 1.15, x: -125.9, y: -65.1, transformOrigin: "0 0" }, duration: 0.01 }, 0);
+tl.to("#c02-p0-cam", { ...{ scale: 1.6, x: -549.0, y: -239.3, transformOrigin: "0 0" }, duration: 3.0, ease: "power2.inOut" }, 1.0);
 tl.fromTo("#c02-cap .w", { opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.22, stagger: 0.07, ease: "power3.out" }, 0.5);
 
-tl.to("#c02-all", { opacity: 0, filter: "blur(8px)", duration: 0.18, ease: "power2.in" }, 3.80);
+tl.to("#c02-all", { opacity: 0, filter: "blur(8px)", duration: 0.18, ease: "power2.in" }, 11.30);
       window.__timelines["c02"] = tl;
     })();
   </script>
