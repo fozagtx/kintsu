@@ -24,6 +24,11 @@ for f in signup signup-terms; do
 done
 git add -A && git commit -qm "demo: saved flows" || true
 
+# Start the demo with nothing locked, so Kane goes red before the check exists.
+rm -rf .ratchet/bug-*.json .ratchet/diffs .ratchet/evidence tests/ratchet
+node -e "const fs=require('fs');const f='eslint.config.js';const s=fs.readFileSync(f,'utf8');fs.writeFileSync(f,s.replace(/const ratchetRules = [\s\S]*?\];/,'const ratchetRules = [];'))"
+git add -A && git commit -qm "demo: start with no locked checks" || true
+
 step "2. The agent writes the bug: the handler reads payload.planId, every signup silently lands on Free"
 git apply demo-app/bugs/dropped-field.patch
 git --no-pager diff --stat
