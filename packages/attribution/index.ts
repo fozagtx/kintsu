@@ -65,24 +65,17 @@ export function attribute(run: KaneResult, map: OwnershipEntry[], expected: Reco
     return { ...base, verdict: 'broken', failedStep, stepUrl, errorMessage, triageTitle, reason: 'Kane marked the step broken (environment, infrastructure or test fault). Not sent to a feature agent.' };
   }
 
-  const fs_ = (run.finalState ?? {}) as Record<string, unknown>;
-  const num = (k: string) => {
-    const v = fs_[k];
-    const n = typeof v === 'number' ? v : Number(String(v ?? '').replace(/[^0-9.-]/g, ''));
-    return Number.isFinite(n) && String(v ?? '') !== '' ? n : null;
-  };
-  const mismatches = Object.entries(expected)
-    .filter(([k, want]) => num(k) !== null && Math.abs((num(k) as number) - want) > 0.004)
-    .map(([k, want]) => `${k}: expected ${want.toFixed(2)}, got ${(num(k) as number).toFixed(2)}`);
+  const mismatches = storedMismatches(run, expected);
 
   let primaryOwner: string | null = null;
   let involved: string[] = [];
   let reason = '';
-  if (mismatches.some((m) => m.startsWith('discount'))) {
+  const text = `${run.summary ?? ''} ${run.failedRemark ?? ''} ${errorMessage ?? ''} ${triageTitle ?? ''} ${failure}`.toLowerCase();
+  if (mismatches.some((m) => m.startsWith('discount')) || /discount|coupon/.test(text)) {
     primaryOwner = 'coupon-agent';
     involved = ['giftwrap-agent'];
-    reason = `Stored discount is wrong (${mismatches.join('; ')}). Discount errors belong to the shared pricing module owned by coupon-agent; gift wrap is involved because the error only appears with wrap on.`;
-  } else if (mismatches.some((m) => m.startsWith('wrap'))) {
+    reason = `Kane found a discount error (${mismatches.join('; ') || (errorMessage ?? run.summary ?? '').slice(0, 200)}). Discount errors belong to the shared pricing module owned by coupon-agent; gift wrap is involved because the error only appears with wrap on.`;
+  } else if (mismatches.some((m) => m.startsWith('wrap')) || /gift.?wrap fee/.test(text)) {
     primaryOwner = 'giftwrap-agent';
     reason = `Stored wrap fee is wrong (${mismatches.join('; ')}).`;
   } else {
@@ -93,4 +86,34 @@ export function attribute(run: KaneResult, map: OwnershipEntry[], expected: Reco
     if (mismatches.length) reason += ` Stored values: ${mismatches.join('; ')}.`;
   }
   return { verdict: 'failed', failedStep, stepUrl, primaryOwner, involved, reason, errorMessage, screenshots: [], triageTitle };
+}
+
+export function storedMismatches(run: KaneResult, expected: Record<string, number>): string[] {
+  const state = (run.finalState ?? {}) as Record<string, unknown>;
+  const num = (k: string) => {
+    const v = state[k];
+    const n = typeof v === 'number' ? v : Number(String(v ?? '').replace(/[^0-9.-]/g, ''));
+    return Number.isFinite(n) && String(v ?? '') !== '' ? n : null;
+  };
+  return Object.entries(expected)
+    .filter(([k, want]) => num(k) !== null && Math.abs((num(k) as number) - want) > 0.004)
+    .map(([k, want]) => `${k}: expected ${want.toFixed(2)}, got ${(num(k) as number).toFixed(2)}`);
+}
+
+export function attributeFalsePass(run: KaneResult, expected: Record<string, number>): Attribution | null {
+  const mismatches = storedMismatches(run, expected);
+  if (!mismatches.length) return null;
+  const has = (k: string) => mismatches.some((m) => m.startsWith(k));
+  const primaryOwner = has('discount') ? 'coupon-agent' : has('wrap') ? 'giftwrap-agent' : 'checkout-agent';
+  return {
+    verdict: 'failed',
+    failedStep: 'final_state',
+    stepUrl: typeof run.finalState?.url === 'string' ? run.finalState.url : null,
+    primaryOwner,
+    involved: has('discount') ? ['giftwrap-agent'] : [],
+    reason: `Kane exited 0, but its stored values contradict docs/pricing-rules.md (${mismatches.join('; ')}). Kintsu does not seal a pass whose own numbers are wrong.`,
+    errorMessage: mismatches.join('; '),
+    screenshots: [],
+    triageTitle: null,
+  };
 }

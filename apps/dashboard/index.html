@@ -33,7 +33,8 @@
 <script>
 const COLORS = { gray: 'var(--gray)', red: 'var(--red)', amber: 'var(--amber)', green: 'var(--green)' };
 const POS = { 'catalog-agent': [90, 300], 'cart-agent': [270, 300], 'coupon-agent': [470, 150], 'giftwrap-agent': [470, 450], 'checkout-agent': [720, 300] };
-let selected = null, data = { nodes: [], edges: [] };
+const q = new URLSearchParams(location.search).get('edge');
+let selected = q === null ? null : Number(q), data = { nodes: [], edges: [] };
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 function draw() {

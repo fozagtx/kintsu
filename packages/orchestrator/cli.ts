@@ -2,7 +2,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { runKane, type KaneResult } from '../kane-runner/index.ts';
-import { attribute, extractStepAssets, type OwnershipEntry } from '../attribution/index.ts';
+import { attribute, attributeFalsePass, extractStepAssets, type OwnershipEntry } from '../attribution/index.ts';
 import { openStore } from '../store/index.ts';
 
 const ROOT = path.resolve(import.meta.dirname, '../..');
@@ -57,7 +57,9 @@ function dispatchAgent(owner: string, prompt: string): { ok: boolean; output: st
         ? ['exec', '--full-auto', prompt]
         : ['-p', prompt];
   log(`dispatching ${owner} via ${AGENT_CLI}`);
-  const r = spawnSync(AGENT_CLI, args, { cwd: ROOT, encoding: 'utf8', timeout: 15 * 60 * 1000, maxBuffer: 16 << 20 });
+  const env = { ...process.env };
+  delete env.CLAUDECODE;
+  const r = spawnSync(AGENT_CLI, args, { cwd: ROOT, env, encoding: 'utf8', timeout: 15 * 60 * 1000, maxBuffer: 16 << 20 });
   return { ok: r.status === 0, output: `${r.stdout ?? ''}\n${r.stderr ?? ''}`.trim().slice(-6000) };
 }
 
@@ -83,7 +85,9 @@ Reply with one paragraph describing the root cause and your change.`;
 }
 
 function seal(seamId: string, tags: string[]) {
-  const src = path.join(ROOT, '.testmuai', 'tests', `${seamId}_test.md`);
+  const dir = path.join(ROOT, '.testmuai', 'tests');
+  const name = fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.startsWith(seamId) && f.endsWith('_test.md')).sort((x, y) => fs.statSync(path.join(dir, y)).mtimeMs - fs.statSync(path.join(dir, x)).mtimeMs)[0] : undefined;
+  const src = path.join(dir, name ?? `${seamId}_test.md`);
   if (!fs.existsSync(src)) return log(`no ${seamId}_test.md written by Kane to seal`);
   const md = fs.readFileSync(src, 'utf8');
   const tagged = /^---\n/.test(md)
@@ -92,7 +96,7 @@ function seal(seamId: string, tags: string[]) {
   fs.mkdirSync(path.join(ROOT, 'tests'), { recursive: true });
   fs.writeFileSync(testmdPath(seamId), tagged);
   fs.rmSync(src);
-  const out = path.join(ROOT, '.testmuai', 'tests', `output-${seamId}`);
+  const out = path.join(dir, `output-${(name ?? `${seamId}_test.md`).replace(/_test\.md$/, '')}`);
   if (fs.existsSync(out)) fs.renameSync(out, path.join(ROOT, 'tests', `output-${seamId}`));
   db.prepare('UPDATE seams SET testmd_path = ? WHERE id = ?').run(testmdPath(seamId), seamId);
   log(`sealed tests/${seamId}_test.md`);
@@ -115,11 +119,16 @@ async function walkSeam(seamId: string): Promise<boolean> {
     db.prepare('UPDATE kane_runs SET screenshots = ? WHERE id = ?').run(JSON.stringify(shots.map((s) => path.relative(ROOT, s))), runId);
     log(`run ${runId}: exit ${run.exitCode}, ${run.summary ?? ''}`);
 
-    if (run.exitCode === 0) {
+    const falsePass = run.exitCode === 0 ? attributeFalsePass(run, seam.expected) : null;
+    if (run.exitCode === 0 && !falsePass) {
       seal(seam.id, seam.tags);
       return true;
     }
-    const attr = attribute(run, ownership, seam.expected);
+    if (falsePass) {
+      const dir = path.join(ROOT, '.testmuai', 'tests');
+      if (fs.existsSync(dir)) for (const f of fs.readdirSync(dir).filter((f) => f.includes(seam.id))) fs.rmSync(path.join(dir, f), { recursive: true });
+    }
+    const attr = falsePass ?? attribute(run, ownership, seam.expected);
     attr.screenshots = shots;
     db.prepare('INSERT INTO attributions VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(runId, attr.failedStep, attr.stepUrl, attr.verdict, attr.primaryOwner, JSON.stringify(attr.involved), attr.reason, attr.errorMessage);
     log(`attribution: ${attr.verdict} -> ${attr.primaryOwner ?? 'nobody'}. ${attr.reason}`);
