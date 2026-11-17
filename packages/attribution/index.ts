@@ -70,12 +70,11 @@ export function attribute(run: KaneResult, map: OwnershipEntry[], expected: Reco
   let primaryOwner: string | null = null;
   let involved: string[] = [];
   let reason = '';
-  const text = `${run.summary ?? ''} ${run.failedRemark ?? ''} ${errorMessage ?? ''} ${triageTitle ?? ''} ${failure}`.toLowerCase();
-  if (mismatches.some((m) => m.startsWith('discount')) || /discount|coupon/.test(text)) {
+  if (mismatches.some((m) => m.startsWith('discount'))) {
     primaryOwner = 'coupon-agent';
     involved = ['giftwrap-agent'];
-    reason = `Kane found a discount error (${mismatches.join('; ') || (errorMessage ?? run.summary ?? '').slice(0, 200)}). Discount errors belong to the shared pricing module owned by coupon-agent; gift wrap is involved because the error only appears with wrap on.`;
-  } else if (mismatches.some((m) => m.startsWith('wrap')) || /gift.?wrap fee/.test(text)) {
+    reason = `Stored discount is wrong (${mismatches.join('; ')}). Discount errors belong to the shared pricing module owned by coupon-agent; gift wrap is involved because the error only appears with wrap on.`;
+  } else if (mismatches.some((m) => m.startsWith('wrap'))) {
     primaryOwner = 'giftwrap-agent';
     reason = `Stored wrap fee is wrong (${mismatches.join('; ')}).`;
   } else {
