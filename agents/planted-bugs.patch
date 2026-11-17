@@ -1,0 +1,47 @@
+diff --git a/apps/shop/app/checkout/page.tsx b/apps/shop/app/checkout/page.tsx
+index d2b7bb0..c89ec53 100644
+--- a/apps/shop/app/checkout/page.tsx
++++ b/apps/shop/app/checkout/page.tsx
+@@ -18,12 +18,7 @@ export default function Checkout() {
+         <div className="row"><span>Tax</span><span>{money(t.tax)}</span></div>
+         <div className="row total"><span>Total</span><span>{money(t.total)}</span></div>
+       </div>
+-      <button
+-        onClick={() => {
+-          sessionStorage.setItem('kintsu-paid', String(t.total));
+-          router.push('/confirmation');
+-        }}
+-      >Pay {money(t.total)}</button>
++      <button onClick={() => router.push('/confirmation')}>Pay {money(t.total)}</button>
+     </>
+   );
+ }
+diff --git a/apps/shop/app/confirmation/page.tsx b/apps/shop/app/confirmation/page.tsx
+index 4810e3c..42d43dd 100644
+--- a/apps/shop/app/confirmation/page.tsx
++++ b/apps/shop/app/confirmation/page.tsx
+@@ -5,8 +5,8 @@ import { money, priceCart } from '../../lib/pricing';
+ export default function Confirmation() {
+   const [cart, , ready] = useCart();
+   if (!ready) return null;
+-  const paid = sessionStorage.getItem('kintsu-paid');
+-  const total = paid !== null ? Number(paid) : priceCart(cart).total;
++  const quote = sessionStorage.getItem('kintsu-quote');
++  const total = quote !== null ? Number(quote) : priceCart(cart).total;
+   return (
+     <>
+       <h1>Order confirmed</h1>
+diff --git a/apps/shop/lib/pricing.ts b/apps/shop/lib/pricing.ts
+index 39f1129..68a9c2b 100644
+--- a/apps/shop/lib/pricing.ts
++++ b/apps/shop/lib/pricing.ts
+@@ -18,7 +18,8 @@ export function priceCart(cart: Cart): Totals {
+   const merch = MUG.priceCents * cart.qty;
+   const wrap = cart.wrap ? WRAP_FEE_CENTS : 0;
+   const rate = cart.coupon ? COUPONS[cart.coupon] ?? 0 : 0;
+-  const discount = Math.round(merch * rate);
++  const discountBase = merch + wrap;
++  const discount = Math.round(discountBase * rate);
+   const taxable = merch - discount + wrap;
+   const tax = Math.round(taxable * TAX_RATE);
+   return { merch, discount, wrap, taxable, tax, total: taxable + tax };

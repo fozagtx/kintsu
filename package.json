@@ -2,13 +2,17 @@
   "name": "kintsu",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=24" },
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "setup": "npm --prefix apps/shop install && npm install -g @testmuai/kane-cli@0.10.4 && npx @testmuai/kane-cli-skill",
     "shop": "npm --prefix apps/shop run dev",
     "graph": "node packages/orchestrator/cli.ts graph",
     "wave": "node packages/orchestrator/cli.ts wave",
     "seam": "node packages/orchestrator/cli.ts seam",
-    "replay": "node packages/orchestrator/cli.ts replay"
+    "replay": "node packages/orchestrator/cli.ts replay",
+    "plant": "git apply agents/planted-bugs.patch",
+    "unplant": "git apply -R agents/planted-bugs.patch"
   }
 }
