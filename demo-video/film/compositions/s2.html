@@ -1,0 +1,40 @@
+<template>
+  <style>
+#root { position: absolute; inset: 0; background: #ffffff; overflow: hidden; font-family: "Inter", sans-serif; color: #111111; }
+.plate { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+.cam { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+.cam img { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+.box { position: absolute; border: 5px solid; border-radius: 10px; }
+.band { position: absolute; left: 0; top: 860px; width: 1920px; height: 220px; background: #ffffff; border-top: 2px solid #dcdce3; }
+.line { position: absolute; left: 140px; top: 916px; font-size: 60px; font-weight: 700; letter-spacing: -0.02em; white-space: nowrap; }
+.w { display: inline-block; margin-right: 0.24em; }
+.red { color: #e5212e; } .green { color: #00a35c; } .blue { color: #1f5eff; } .muted { color: #5b5b66; }
+.card { position: absolute; border: 2px solid #dcdce3; border-radius: 12px; padding: 28px 36px; background: #ffffff; }
+.mono { font: 500 28px/1.75 "JetBrains Mono", monospace; white-space: pre; }
+.minus { background: #fdecee; color: #b3141f; } .plus { background: #e6f6ee; color: #00753f; }
+.h { position: absolute; left: 140px; top: 120px; font-size: 60px; font-weight: 700; letter-spacing: -0.02em; }
+</style>
+  <div id="root" data-composition-id="s2" data-width="1920" data-height="1080">
+    <div id="root-s2" style="position:absolute;inset:0">
+    <div id="s2-p0" class="plate"><div id="s2-p0-cam" class="cam"><img src="assets/kane-run1-checkout.jpg" alt="Kane's checkout screenshot" /><div id="s2-p0-b0" class="box" style="left:1140px;top:212px;width:72px;height:36px;border-color:#e5212e"></div><div id="s2-p0-b1" class="box" style="left:1120px;top:333px;width:92px;height:42px;border-color:#e5212e"></div></div></div>
+<div id="s2-l0-band" class="band"></div><div id="s2-l0" class="line"><span class="w">Kane,</span><span class="w">real</span><span class="w">browser:</span><span class="w red">$4.50</span><span class="w">off.</span><span class="w">Rules</span><span class="w">say</span><span class="w">$4.00.</span></div>
+
+    </div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#s2-p0", { opacity: 1 }, { opacity: 1, duration: 0.01 }, 0);
+tl.fromTo("#s2-p0-cam", { scale: 1, x: 0.0, y: 0.0, transformOrigin: "0 0" }, { ...{ scale: 1, x: 0.0, y: 0.0, transformOrigin: "0 0" }, duration: 0.01 }, 0);
+tl.to("#s2-p0-cam", { ...{ scale: 2.1, x: -1140.0, y: -48.0, transformOrigin: "0 0" }, duration: 1.3, ease: "power2.inOut" }, 0.8);
+tl.fromTo("#s2-p0-b0", { opacity: 0, scale: 1.4 }, { opacity: 1, scale: 1, duration: 0.25, ease: "back.out(1.6)" }, 5.6);
+tl.fromTo("#s2-p0-b1", { opacity: 0, scale: 1.4 }, { opacity: 1, scale: 1, duration: 0.25, ease: "back.out(1.6)" }, 8.2);
+tl.fromTo("#s2-l0-band", { yPercent: 100 }, { yPercent: 0, duration: 0.45, ease: "expo.out" }, 9.4);
+tl.fromTo("#s2-l0 .w", { opacity: 0, filter: "blur(6px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.13, stagger: 0.08, ease: "power2.out" }, 9.6);
+tl.to(["#s2-l0", "#s2-l0-band"], { opacity: 0, duration: 0.25, ease: "power3.in" }, 15.9);
+
+tl.to("#root-s2", { opacity: 0, filter: "blur(8px)", duration: 0.3, ease: "power3.in" }, 16.1);
+      window.__timelines["s2"] = tl;
+    })();
+  </script>
+</template>

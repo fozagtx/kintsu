@@ -5,3 +5,9 @@ node_modules
 .testmuai/variables/
 .testmuai/kaneai/
 .DS_Store
+demo-video/film/.hyperframes/
+demo-video/film/.media/
+demo-video/film/CLAUDE.md
+demo-video/film/AGENTS.md
+demo-video/film/assets/music/
+demo-video/film-src/check.jpg

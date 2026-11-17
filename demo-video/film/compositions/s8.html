@@ -1,0 +1,45 @@
+<template>
+  <style>
+#root { position: absolute; inset: 0; background: #ffffff; overflow: hidden; font-family: "Inter", sans-serif; color: #111111; }
+.plate { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+.cam { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+.cam img { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+.box { position: absolute; border: 5px solid; border-radius: 10px; }
+.band { position: absolute; left: 0; top: 860px; width: 1920px; height: 220px; background: #ffffff; border-top: 2px solid #dcdce3; }
+.line { position: absolute; left: 140px; top: 916px; font-size: 60px; font-weight: 700; letter-spacing: -0.02em; white-space: nowrap; }
+.w { display: inline-block; margin-right: 0.24em; }
+.red { color: #e5212e; } .green { color: #00a35c; } .blue { color: #1f5eff; } .muted { color: #5b5b66; }
+.card { position: absolute; border: 2px solid #dcdce3; border-radius: 12px; padding: 28px 36px; background: #ffffff; }
+.mono { font: 500 28px/1.75 "JetBrains Mono", monospace; white-space: pre; }
+.minus { background: #fdecee; color: #b3141f; } .plus { background: #e6f6ee; color: #00753f; }
+.h { position: absolute; left: 140px; top: 120px; font-size: 60px; font-weight: 700; letter-spacing: -0.02em; }
+</style>
+  <div id="root" data-composition-id="s8" data-width="1920" data-height="1080">
+    <div id="root-s8" style="position:absolute;inset:0">
+    
+<div id="s8-stats" style="position:absolute;left:0;top:300px;width:1920px;display:flex;justify-content:center;gap:90px">
+  <div id="s8-a" style="text-align:center"><div style="font-size:120px;font-weight:800;color:#1f5eff">11</div><div style="font-size:34px;font-weight:600">minutes</div></div>
+  <div id="s8-b" style="text-align:center"><div style="font-size:120px;font-weight:800;color:#1f5eff">4</div><div style="font-size:34px;font-weight:600">Kane walks</div></div>
+  <div id="s8-c" style="text-align:center"><div style="font-size:120px;font-weight:800;color:#1f5eff">2</div><div style="font-size:34px;font-weight:600">agent fixes</div></div>
+  <div id="s8-d" style="text-align:center"><div style="font-size:120px;font-weight:800;color:#1f5eff">2</div><div style="font-size:34px;font-weight:600">saved tests</div></div>
+</div>
+<div id="s8-end" style="position:absolute;left:0;top:360px;width:1920px;text-align:center;opacity:0">
+  <div style="font-size:150px;font-weight:800;letter-spacing:-0.03em;color:#1f5eff">Kintsu</div>
+  <div style="font:500 42px 'JetBrains Mono', monospace;margin-top:20px">github.com/fozagtx/Rachet</div>
+  <div style="font-size:34px;font-weight:500;color:#5b5b66;margin-top:16px">Verified by Kane CLI</div>
+</div>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#s8-a", { opacity: 0, filter: "blur(6px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.2, ease: "power2.out" }, 0.8);
+tl.fromTo("#s8-b", { opacity: 0, filter: "blur(6px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.2, ease: "power2.out" }, 1.4);
+tl.fromTo("#s8-c", { opacity: 0, filter: "blur(6px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.2, ease: "power2.out" }, 2.0);
+tl.fromTo("#s8-d", { opacity: 0, filter: "blur(6px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.2, ease: "power2.out" }, 2.6);
+tl.to("#s8-stats", { opacity: 0, filter: "blur(8px)", duration: 0.3, ease: "power3.in" }, 6.4);
+tl.fromTo("#s8-end", { opacity: 0, filter: "blur(10px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.3, ease: "power2.out" }, 7.0);
+      window.__timelines["s8"] = tl;
+    })();
+  </script>
+</template>
