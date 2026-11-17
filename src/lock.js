@@ -116,7 +116,7 @@ function commitMessage(r) {
 
 function summary(r, sha) {
   return [
-    `Ratchet locked ${r.id} as a ${r.check.type} check: ${r.check.path}`,
+    `Ratchet locked ${r.id} as ${({ "unit-test": "a unit test", eslint: "an ESLint rule", smoke: "a smoke promotion" })[r.check.type]}: ${r.check.path}`,
     `  why: ${r.classification.reason}`,
     r.fallback ? `  fell back from ${r.fallback.from}: its proof did not hold` : null,
     formatProof(r.id, r.check, r.proof).replace(/^/gm, '  '),
