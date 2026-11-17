@@ -5,8 +5,8 @@ import { money, priceCart } from '../../lib/pricing';
 export default function Confirmation() {
   const [cart, , ready] = useCart();
   if (!ready) return null;
-  const quote = sessionStorage.getItem('kintsu-quote');
-  const total = quote !== null ? Number(quote) : priceCart(cart).total;
+  const paid = sessionStorage.getItem('kintsu-paid');
+  const total = paid !== null ? Number(paid) : priceCart(cart).total;
   return (
     <>
       <h1>Order confirmed</h1>

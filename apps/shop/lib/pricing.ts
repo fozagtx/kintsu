@@ -18,8 +18,7 @@ export function priceCart(cart: Cart): Totals {
   const merch = MUG.priceCents * cart.qty;
   const wrap = cart.wrap ? WRAP_FEE_CENTS : 0;
   const rate = cart.coupon ? COUPONS[cart.coupon] ?? 0 : 0;
-  const discountBase = merch + wrap;
-  const discount = Math.round(discountBase * rate);
+  const discount = Math.round(merch * rate);
   const taxable = merch - discount + wrap;
   const tax = Math.round(taxable * TAX_RATE);
   return { merch, discount, wrap, taxable, tax, total: taxable + tax };

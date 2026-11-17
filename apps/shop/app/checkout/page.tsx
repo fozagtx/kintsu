@@ -18,7 +18,12 @@ export default function Checkout() {
         <div className="row"><span>Tax</span><span>{money(t.tax)}</span></div>
         <div className="row total"><span>Total</span><span>{money(t.total)}</span></div>
       </div>
-      <button onClick={() => router.push('/confirmation')}>Pay {money(t.total)}</button>
+      <button
+        onClick={() => {
+          sessionStorage.setItem('kintsu-paid', String(t.total));
+          router.push('/confirmation');
+        }}
+      >Pay {money(t.total)}</button>
     </>
   );
 }

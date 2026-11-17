@@ -81,7 +81,7 @@ Screenshots: ${attr.screenshots.slice(-4).join(', ')}
 
 Fix the product code in your files so the flow is correct. Do not edit the Kane objective, agents/, tests/, or docs/. Do not run Kane yourself: Kintsu re-runs the identical command after you finish:
 ${cmd.join(' ')}
-Reply with one paragraph describing the root cause and your change.`;
+Do not add code comments. Reply with one paragraph describing the root cause and your change.`;
 }
 
 function seal(seamId: string, tags: string[]) {
@@ -157,7 +157,7 @@ async function wave() {
     for (const t of ready) {
       const built = t.files.every((f: string) => fs.existsSync(path.join(ROOT, f)));
       if (!built) {
-        const r = dispatchAgent(t.owner, `You are ${t.owner}. Implement "${t.title}" for the shop in apps/shop, touching only ${t.files.join(', ')}. Follow docs/pricing-rules.md. Report when done; you do not decide whether the product is done.`);
+        const r = dispatchAgent(t.owner, `You are ${t.owner}. Implement "${t.title}" for the shop in apps/shop, touching only ${t.files.join(', ')}. Follow docs/pricing-rules.md. Do not add code comments. Report when done; you do not decide whether the product is done.`);
         if (!r.ok) throw new Error(`${t.owner} failed: ${r.output.slice(-500)}`);
       }
       db.prepare('UPDATE tasks SET status = ? WHERE id = ?').run('complete', t.id);
