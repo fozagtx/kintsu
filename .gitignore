@@ -1,6 +1,7 @@
 node_modules
-.ratchet/state/
+.next
+.kintsu/
 .testmuai/evidence/
+.testmuai/variables/
 .testmuai/kaneai/
 .DS_Store
-.testmuai/tests/output-*/

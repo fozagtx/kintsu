@@ -1,23 +1,14 @@
 {
-  "name": "ratchet",
-  "version": "0.1.0",
-  "description": "Your agent writes the bug once, and once only. Kane catches it in a browser; Ratchet locks it as a deterministic check.",
+  "name": "kintsu",
+  "private": true,
   "type": "module",
-  "bin": { "ratchet": "bin/ratchet.js" },
-  "engines": { "node": ">=20" },
+  "engines": { "node": ">=24" },
   "scripts": {
-    "app": "node demo-app/server.js",
-    "verify": "node bin/ratchet.js verify",
-    "check": "node bin/ratchet.js check",
-    "prove": "node bin/ratchet.js prove",
-    "status": "node bin/ratchet.js status",
-    "lint": "eslint demo-app",
-    "test": "node --test test/",
-    "plant:dropped-field": "git apply demo-app/bugs/dropped-field.patch",
-    "plant:fake-disabled": "git apply demo-app/bugs/fake-disabled.patch",
-    "setup": "npm install && npm install -g @testmuai/kane-cli@0.10.4 && kane-cli login"
-  },
-  "devDependencies": {
-    "eslint": "9.39.5"
+    "setup": "npm --prefix apps/shop install && npm install -g @testmuai/kane-cli@0.10.4 && npx @testmuai/kane-cli-skill",
+    "shop": "npm --prefix apps/shop run dev",
+    "graph": "node packages/orchestrator/cli.ts graph",
+    "wave": "node packages/orchestrator/cli.ts wave",
+    "seam": "node packages/orchestrator/cli.ts seam",
+    "replay": "node packages/orchestrator/cli.ts replay"
   }
 }

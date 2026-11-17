@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kintsu graph</title>
+<style>
+  :root { --ink: #111; --muted: #5b5b66; --line: #dcdce3; --gray: #9a9aa5; --red: #e5212e; --amber: #ff9f00; --green: #00a35c; --blue: #1f5eff; }
+  body { margin: 0; background: #fff; color: var(--ink); font: 15px/1.5 ui-sans-serif, system-ui, sans-serif; }
+  header { padding: 16px 24px; border-bottom: 2px solid var(--line); font-weight: 800; }
+  .wrap { display: grid; grid-template-columns: minmax(0, 1fr) 460px; gap: 0; min-height: calc(100vh - 58px); }
+  svg { width: 100%; height: 100%; min-height: 560px; }
+  .node rect { fill: #fff; stroke: var(--ink); stroke-width: 2; rx: 10; }
+  .node text { font-weight: 700; font-size: 14px; }
+  .edge { fill: none; stroke-width: 6; cursor: pointer; }
+  .label { font-size: 13px; font-weight: 700; cursor: pointer; }
+  aside { border-left: 2px solid var(--line); padding: 20px; overflow: auto; }
+  h2 { margin: 0 0 8px; font-size: 18px; }
+  .pill { display: inline-block; padding: 2px 10px; border-radius: 6px; color: #fff; font-weight: 700; }
+  pre { white-space: pre-wrap; background: #f6f6f8; padding: 10px; border-radius: 8px; font-size: 12px; }
+  .shots { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .shots img { width: 100%; border: 2px solid var(--line); border-radius: 6px; }
+  .muted { color: var(--muted); }
+  @media (max-width: 900px) { .wrap { grid-template-columns: 1fr; } aside { border-left: 0; border-top: 2px solid var(--line); } }
+</style>
+</head>
+<body>
+<header>Kintsu: feature agents as nodes, Kane-verified seams as edges</header>
+<div class="wrap">
+  <svg id="g" viewBox="0 0 900 620"></svg>
+  <aside id="side"><p class="muted">Click a seam edge to open its last Kane run.</p></aside>
+</div>
+<script>
+const COLORS = { gray: 'var(--gray)', red: 'var(--red)', amber: 'var(--amber)', green: 'var(--green)' };
+const POS = { 'catalog-agent': [90, 300], 'cart-agent': [270, 300], 'coupon-agent': [470, 150], 'giftwrap-agent': [470, 450], 'checkout-agent': [720, 300] };
+let selected = null, data = { nodes: [], edges: [] };
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+function draw() {
+  const g = document.getElementById('g');
+  let html = '';
+  const deps = [['catalog-agent', 'cart-agent'], ['cart-agent', 'coupon-agent'], ['cart-agent', 'giftwrap-agent'], ['coupon-agent', 'checkout-agent'], ['giftwrap-agent', 'checkout-agent']];
+  for (const [a, b] of deps) html += `<line x1="${POS[a][0]}" y1="${POS[a][1]}" x2="${POS[b][0]}" y2="${POS[b][1]}" stroke="var(--line)" stroke-width="2"/>`;
+  data.edges.forEach((e, i) => {
+    const [cx, cy] = POS['coupon-agent'], [wx, wy] = POS['giftwrap-agent'], [kx, ky] = POS['checkout-agent'];
+    const bend = i === 0 ? 0 : 70;
+    const d = `M${cx + 60},${cy + 20} Q${600 + bend},${300} ${kx - 70},${ky - 10 + i * 20} M${wx + 60},${wy - 20} Q${600 + bend},${300} ${kx - 70},${ky - 10 + i * 20}`;
+    html += `<path class="edge" d="${d}" stroke="${COLORS[e.color]}" data-i="${i}"/>`;
+    html += `<text class="label" x="${560 + bend}" y="${300 + (i ? 40 : -20)}" fill="${COLORS[e.color]}" data-i="${i}">${esc(e.name)}</text>`;
+  });
+  for (const n of data.nodes) {
+    const [x, y] = POS[n.id] ?? [450, 560];
+    html += `<g class="node"><rect x="${x - 75}" y="${y - 24}" width="150" height="48"/><text x="${x}" y="${y + 5}" text-anchor="middle">${esc(n.id)}</text></g>`;
+  }
+  g.innerHTML = html;
+  g.querySelectorAll('[data-i]').forEach((el) => (el.onclick = () => { selected = Number(el.dataset.i); side(); }));
+}
+
+function side() {
+  const e = data.edges[selected];
+  if (!e) return;
+  const r = e.run, a = e.attribution, t = e.ticket;
+  const shots = r?.screenshots ? JSON.parse(r.screenshots).filter((s) => s.includes('annotated') || s.includes('screenshot')).slice(-6) : [];
+  document.getElementById('side').innerHTML = `
+    <h2>${esc(e.name)}</h2>
+    <span class="pill" style="background:${COLORS[e.color]}">${e.color}</span>
+    ${e.live ? `<p class="muted">Live: step ${esc(e.live.step)} ${esc(e.live.status)}: ${esc(e.live.remark)}</p>` : ''}
+    ${r ? `<p><b>Attempt ${r.attempt}</b>, exit ${r.exit_code}, ${esc(r.run_end_status)}</p><p>${esc(r.summary)}</p>
+      <p><b>Stored values</b></p><pre>${esc(r.final_state)}</pre>
+      ${r.evidence_path ? `<p><b>Evidence</b></p><pre>kane-cli evidence serve ${esc(r.evidence_path)}</pre>` : ''}
+      ${r.test_url ? `<p><a href="${esc(r.test_url)}" target="_blank" rel="noopener">Open in KaneAI Test Manager</a></p>` : ''}` : '<p class="muted">Not run yet.</p>'}
+    ${a ? `<p><b>Attribution:</b> ${esc(a.verdict)} to <b>${esc(a.primary_owner)}</b></p><p>${esc(a.reason)}</p>` : ''}
+    ${t ? `<p><b>Repair ticket</b> to ${esc(t.assignee)}: ${esc(t.status)}</p><pre>${esc(t.agent_output ?? '')}</pre>` : ''}
+    <div class="shots">${shots.map((s) => `<img src="/${esc(s.replace(/^\.kintsu\//, ''))}" alt="Kane step screenshot">`).join('')}</div>`;
+}
+
+async function tick() {
+  try {
+    data = await (await fetch('/api/graph')).json();
+    draw();
+    if (selected !== null) side();
+  } catch {}
+  setTimeout(tick, 1000);
+}
+tick();
+</script>
+</body>
+</html>

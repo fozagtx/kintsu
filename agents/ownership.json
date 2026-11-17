@@ -1,0 +1,7 @@
+[
+  { "screen": "/product", "owner": "catalog-agent" },
+  { "screen": "/cart", "owner": "cart-agent", "involved": ["coupon-agent", "giftwrap-agent"] },
+  { "screen": "/checkout", "owner": "checkout-agent" },
+  { "screen": "/confirmation", "owner": "checkout-agent" },
+  { "screen": "/", "owner": "catalog-agent" }
+]

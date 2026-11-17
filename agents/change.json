@@ -1,0 +1,31 @@
+{
+  "id": "chg-coupon-wrap-checkout",
+  "prompt": "Add the SAVE10 coupon, a $5 gift-wrap option, and a checkout with tax and confirmation to the shop.",
+  "tasks": [
+    { "id": "t-catalog", "owner": "catalog-agent", "title": "Catalog and add to cart", "files": ["apps/shop/app/page.tsx", "apps/shop/app/product/"], "depends_on": [] },
+    { "id": "t-cart", "owner": "cart-agent", "title": "Cart quantity and subtotal", "files": ["apps/shop/lib/cart.ts"], "depends_on": ["t-catalog"] },
+    { "id": "t-coupon", "owner": "coupon-agent", "title": "Coupon SAVE10", "files": ["apps/shop/lib/pricing.ts", "apps/shop/app/cart/page.tsx"], "depends_on": ["t-cart"] },
+    { "id": "t-wrap", "owner": "giftwrap-agent", "title": "Gift wrap $5", "files": ["apps/shop/lib/pricing.ts", "apps/shop/app/cart/page.tsx"], "depends_on": ["t-cart"] },
+    { "id": "t-checkout", "owner": "checkout-agent", "title": "Checkout, tax, confirmation", "files": ["apps/shop/app/checkout/", "apps/shop/app/confirmation/"], "depends_on": ["t-coupon", "t-wrap"] }
+  ],
+  "seams": [
+    {
+      "id": "coupon-wrap-checkout",
+      "name": "Coupon + gift wrap + checkout",
+      "owners": ["coupon-agent", "giftwrap-agent", "checkout-agent"],
+      "after": "t-checkout",
+      "tags": ["seam", "checkout"],
+      "objective": "Go to http://localhost:3000, add the $40 mug to the cart, store the merchandise subtotal as 'merch', apply coupon SAVE10, store the discount as 'discount', add gift wrap, store the gift-wrap fee as 'wrap', go to checkout, store the tax as 'tax', store the total as 'total', then verify the stored discount equals 10 percent of the stored merch, the stored wrap equals $5.00, and the stored total equals merch minus discount plus wrap plus tax",
+      "expected": { "merch": 40.0, "discount": 4.0, "wrap": 5.0, "tax": 4.1, "total": 45.1 }
+    },
+    {
+      "id": "confirmation-matches-checkout",
+      "name": "Confirmation matches checkout",
+      "owners": ["coupon-agent", "giftwrap-agent", "checkout-agent"],
+      "after": "t-checkout",
+      "tags": ["seam", "confirmation"],
+      "objective": "Go to http://localhost:3000, add the $40 mug to the cart, apply coupon SAVE10, add gift wrap, go to checkout, store the checkout total as 'total', click Pay, store the total paid on the confirmation page as 'paid', then verify the stored paid equals the stored total",
+      "expected": { "total": 45.1, "paid": 45.1 }
+    }
+  ]
+}
