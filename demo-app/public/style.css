@@ -64,3 +64,5 @@ button:disabled, button.is-disabled {
 
 #welcome h1 { color: var(--green); }
 #welcome-text { font-size: 18px; }
+
+[hidden] { display: none !important; }
