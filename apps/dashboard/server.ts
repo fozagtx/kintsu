@@ -13,7 +13,7 @@ http
     const url = new URL(req.url ?? '/', 'http://localhost');
     if (url.pathname === '/api/graph') {
       res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-store' });
-      return res.end(JSON.stringify(graphSnapshot(db)));
+      return res.end(JSON.stringify(graphSnapshot(db, url.searchParams.get('at') ?? undefined)));
     }
     if (url.pathname.startsWith('/runs/')) {
       const file = path.join(ROOT, '.kintsu', url.pathname);

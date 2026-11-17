@@ -19,17 +19,19 @@ export function openStore(root: string) {
 
 export type Store = ReturnType<typeof openStore>;
 
-export function graphSnapshot(db: Store) {
+export function graphSnapshot(db: Store, at?: string) {
   const tasks = db.prepare('SELECT * FROM tasks').all() as any[];
   const seams = db.prepare('SELECT * FROM seams').all() as any[];
   const nodes = tasks.map((t) => ({ id: t.owner_agent, title: t.title, status: t.status }));
   const edges = seams.map((s) => {
-    const run = db.prepare('SELECT * FROM kane_runs WHERE seam_id = ? ORDER BY id DESC LIMIT 1').get(s.id) as any;
+    const run = (at
+      ? db.prepare('SELECT * FROM kane_runs WHERE seam_id = ? AND ended_at <= ? ORDER BY id DESC LIMIT 1').get(s.id, at)
+      : db.prepare('SELECT * FROM kane_runs WHERE seam_id = ? ORDER BY id DESC LIMIT 1').get(s.id)) as any;
     const attr = run ? (db.prepare('SELECT * FROM attributions WHERE run_id = ?').get(run.id) as any) : null;
     const ticket = run ? (db.prepare('SELECT * FROM repair_tickets WHERE run_id = ?').get(run.id) as any) : null;
-    const live = db.prepare('SELECT * FROM run_events WHERE seam_id = ? ORDER BY id DESC LIMIT 1').get(s.id) as any;
+    const live = at ? null : (db.prepare('SELECT * FROM run_events WHERE seam_id = ? ORDER BY id DESC LIMIT 1').get(s.id) as any);
     let color = 'gray';
-    if (run) color = run.exit_code === 0 ? 'green' : attr?.verdict === 'failed' ? 'red' : 'amber';
+    if (run) color = attr?.verdict === 'failed' ? 'red' : run.exit_code === 0 ? 'green' : 'amber';
     return { id: s.id, name: s.name, owners: JSON.parse(s.owners), color, run, attribution: attr, ticket, live };
   });
   return { nodes, edges };
