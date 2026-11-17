@@ -125,7 +125,7 @@ export async function verify(root, cfg, { sessionId = 'cli', log = () => {} } = 
   const results = [];
   try {
     for (const flow of runnable) {
-      log(`ratchet: replaying "${flow.name}" with Kane (healing off)…`);
+      log(`ratchet: replaying "${flow.name}" with Kane (healing off)...`);
       results.push({ flow, res: await runKane(root, replayArgs(flow, cfg)) });
     }
   } finally {

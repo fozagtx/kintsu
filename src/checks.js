@@ -6,7 +6,7 @@ import { spawnSync } from 'node:child_process';
 import { sha256 } from './store.js';
 import { readEslintRules, hasTag } from './write-check.js';
 
-const tail = (s, n = 2500) => (s.length > n ? '…' + s.slice(-n) : s).trim();
+const tail = (s, n = 2500) => (s.length > n ? '...' + s.slice(-n) : s).trim();
 
 // A parent `node --test` leaks NODE_TEST_CONTEXT, which makes a nested
 // `node --test` report to the parent instead of exiting with its own verdict.

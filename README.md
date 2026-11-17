@@ -6,25 +6,6 @@ Coding agents copy whatever patterns they find in the codebase. If a bug stays i
 
 Ratchet turns every bug caught in a real browser into one of those.
 
-```
-agent says "done"
-      │
-      ▼
- Stop hook ──► locked checks ──fail──► blocked at check · 0 credits · no browser
-      │            │
-      │          pass
-      │            ▼
-      │      Kane replays the saved flow in a real browser (healing off)
-      │            │
-      │     red ───┴─── green
-      │      │            │
-      │      ▼            ▼
-      │  stop blocked,   classify the failure → write ONE check → prove it → commit
-      │  agent gets the       (unit test · ESLint rule · smoke promotion)
-      │  run_end, remark
-      └── and evidence pack
-```
-
 Other tools fix the bug. Ratchet deletes the whole class of bug.
 
 ---
@@ -82,12 +63,12 @@ Every locked bug leaves a full record in the repo:
 
 ```
 .ratchet/
-├── config.json                  flows, app, handlers, lint targets
-├── flows.lock.json              hashes of each objective and its saved steps
-├── <bug-id>.json                objective · run_end · classification · check · proof
-├── diffs/<bug-id>.bad.diff      the change that introduced the bug
-├── diffs/<bug-id>.fix.diff      the change that fixed it
-└── evidence/<bug-id>.evidence   the sealed Kane evidence pack
+  config.json                  flows, app, handlers, lint targets
+  flows.lock.json              hashes of each objective and its saved steps
+  <bug-id>.json                objective, run_end, classification, check, proof
+  diffs/<bug-id>.bad.diff      the change that introduced the bug
+  diffs/<bug-id>.fix.diff      the change that fixed it
+  evidence/<bug-id>.evidence   the sealed Kane evidence pack
 ```
 
 To open an evidence pack: `kane-cli evidence serve .ratchet/evidence/<bug-id>.evidence`
@@ -111,7 +92,7 @@ To open an evidence pack: `kane-cli evidence serve .ratchet/evidence/<bug-id>.ev
 | Patch | The bug | Why code review misses it | Check Ratchet writes |
 |---|---|---|---|
 | `dropped-field.patch` | The handler reads `payload.planId` instead of `payload.plan`, so every Pro signup lands on Free | It looks like a harmless rename, and a silent fallback hides it | Unit test on `createAccount` |
-| `fake-disabled.patch` | The button gets a grey `is-disabled` class but is never actually disabled, so you can sign up without accepting the terms | It looks disabled in every screenshot | ESLint rule banning `classList.toggle('…disabled…')` |
+| `fake-disabled.patch` | The button gets a grey `is-disabled` class but is never actually disabled, so you can sign up without accepting the terms | It looks disabled in every screenshot | ESLint rule banning `classList.toggle('is-disabled')` |
 
 ```bash
 npm run app                    # http://localhost:4310
@@ -131,7 +112,7 @@ npm run verify                 # watch Kane catch it
 bin/ratchet.js          CLI entry
 src/run-kane.js         spawns kane-cli, parses NDJSON, returns a verdict
 src/verify.js           the Stop hook logic
-src/classify.js         failure → which check to write
+src/classify.js         maps a failure to the check it should write
 src/write-check.js      writes the unit test, lint rule, or smoke tag
 src/prove.js            puts the bad code back and shows the check rejecting it
 src/lock.js             receipt + commit
