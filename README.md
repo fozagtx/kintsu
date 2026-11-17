@@ -1,134 +1,190 @@
 # Ratchet
 
-> Your agent writes the bug once, and once only.
+Ratchet runs Kane CLI in a real browser every time your coding agent says it is done, and turns each bug Kane catches into a check committed to the repo.
 
-Coding agents copy whatever patterns they find in the codebase. If a bug stays in the code, it comes back. Adding another line to `AGENTS.md` doesn't stop it, because nothing enforces prose. A test or a lint rule is enforced.
+## What is it?
 
-Ratchet turns every bug caught in a real browser into one of those.
+Ratchet adds four parts to an agent's coding loop:
 
-Other tools fix the bug. Ratchet deletes the whole class of bug.
+1. **Stop hook.** Runs `ratchet verify` when the agent tries to stop. Required.
+2. **Kane replay.** Replays the saved browser flow for each area the change touched, with healing off. Required. You need a Kane account.
+3. **Check writer.** After a red flow goes green, it reads the fix and writes one deterministic check: a unit test, an ESLint rule, or a smoke promotion of the Kane flow.
+4. **Proof.** Shows the check passes on the fixed code and fails when the bad code is put back. No browser, no credits.
 
----
-
-## Quick start
-
-```bash
-git clone https://github.com/fozagtx/Rachet.git ratchet && cd ratchet
-npm run setup          # npm install, pins @testmuai/kane-cli@0.10.4, kane-cli login --oauth
-bash scripts/demo.sh   # the whole loop, end to end, in a throwaway clone
-```
-
-You need Node 20+, git, Chrome, and a TestMu AI (Kane) account. Saved flows replay from cache, so after the first authoring run, replays cost no model credits.
-
-To use the real loop, open the repo in Claude Code. The Stop hook is already registered in `.claude/settings.json`. From then on, every time the agent says it's done, Ratchet checks its work.
-
----
+The agent writes the fixes. Ratchet decides whether the agent may stop, and writes and commits the checks.
 
 ## How it works
 
-1. **The agent stops.** The Stop hook runs `ratchet verify`.
-2. **Locked checks run first.** They're deterministic and free. If one fails, the stop is blocked with `blocked at check, 0 credits`, and Kane never starts.
-3. **Kane replays the saved flows** for every area the change touched. Replays run in a real browser with `--no-adaptive-heal`.
-4. **Red:** Ratchet exits with code 2, so the agent can't stop. The agent gets Kane's `run_end` line, the remark, and the path to the evidence pack.
-5. **The agent fixes the code.** Ratchet replays the *same* saved flow. The objective can't be reworded to get a pass.
-6. **Green:** Ratchet diffs the bad code against the fix, picks one check type, and writes the check.
-7. **Proof:** in a temporary git worktree, the check has to pass on the fixed code and fail once the bad code is put back. No browser runs. A check that fails either half is thrown away.
-8. **Commit:** the fix, the check, and the receipt are committed together, with the evidence path in the commit message. Ratchet never pushes.
-
-## What Kane found, and what Ratchet writes
-
-| Kane found | Ratchet writes | Lands in |
-|---|---|---|
-| A control looked disabled but still fired | ESLint `no-restricted-syntax` rule, taken from the exact line the fix removed | `eslint.config.js` |
-| The server accepted the request but dropped a field | Unit test that sends every form field through the handler | `tests/ratchet/` |
-| A value sent empty, or as the wrong type | Narrower type on the function that sends it *(planned)* | source file |
-| Anything else | The saved Kane flow is promoted to the `smoke` tag | `_test.md` frontmatter |
-
-The classifier always returns a check and never returns prose. If nothing deterministic fits, the fallback is the smoke promotion.
-
-## Hard rules
-
-- **Never writes prose.** Ratchet refuses to touch `AGENTS.md` or `CLAUDE.md`.
-- **The same objective, every time.** Each flow's objective and saved test steps are hashed in `.ratchet/flows.lock.json`. If either one is edited to get a pass, the stop is blocked.
-- **Healing is always off for replays**, so a re-authored step can never turn a real failure into a pass.
-- **Checks only get stricter.** Deleting or editing a locked check blocks the stop.
-- **Checks are kept only if their proof holds.** A check must pass on the fix and fail on the bug.
-- **Every check is committed** with its evidence pack path in the message.
-- **No infinite loops.** After three red cycles in a row, the agent is allowed to stop and the problem goes to you.
-- **Infrastructure problems never block the agent.** If Kane can't start (exit 2) or times out (exit 3), the stop goes through.
-
-## The receipt
-
-Every locked bug leaves a full record in the repo:
-
-```
-.ratchet/
-  config.json                  flows, app, handlers, lint targets
-  flows.lock.json              hashes of each objective and its saved steps
-  <bug-id>.json                objective, run_end, classification, check, proof
-  diffs/<bug-id>.bad.diff      the change that introduced the bug
-  diffs/<bug-id>.fix.diff      the change that fixed it
-  evidence/<bug-id>.evidence   the sealed Kane evidence pack
+```text
+              AGENT SAYS DONE
+                    |
+                    v
+          +-------------------+
+          |   LOCKED CHECKS   |-- fail --> stop blocked
+          +-------------------+            (0 credits, Kane not run)
+                    | pass
+                    v
+          +-------------------+
+          |   KANE REPLAY     |
+          |   healing off     |
+          +-------------------+
+             |             |
+            red          green
+             |             |
+             v             v
+     stop blocked     was this flow red before?
+     agent gets             |
+     run_end, remark,      yes
+     evidence path          |
+             |              v
+             |      +-------------------+
+             |      |   WRITE ONE CHECK |
+             |      +-------------------+
+             |              |
+             |              v
+             |      +-------------------+
+             |      |   PROVE IT        |-- fails --> undo it, promote
+             |      |   no browser      |             the Kane flow to smoke
+             |      +-------------------+
+             |              |
+             v              v
+      agent fixes,       commit fix + check + receipt
+      stops again        (never pushed)
 ```
 
-To open an evidence pack: `kane-cli evidence serve .ratchet/evidence/<bug-id>.evidence`
+The agent gets three red cycles in a row. After the third, it may stop and the failure goes to you. If Kane cannot start (exit 2) or times out (exit 3), the stop is not blocked.
 
-## Commands
+## Why use it?
 
-| Command | What it does |
-|---|---|
-| `ratchet verify [--hook]` | Runs locked checks, then Kane on the touched flows. This is what the Stop hook runs |
-| `ratchet author <flow>` | Authors a flow once with Kane, saves it, and locks its objective |
-| `ratchet lock` | Replays pending red flows and locks the ones that now pass |
-| `ratchet prove [bug-id]` | Puts the bad code back in a temporary worktree and shows the check blocks it |
-| `ratchet check` | Runs every locked check |
-| `ratchet smoke` | Replays every smoke-tagged flow with healing off |
-| `ratchet status` | Shows pending bugs and locked checks |
+- A bug the browser caught once is caught by a test or lint rule from then on, before Kane even runs.
+- Reintroducing a locked bug costs 0 credits. The check blocks it.
+- The agent cannot pass by rewording the objective or editing the saved Kane test. Both are hashed.
+- Every check ships with a receipt: the failing `run_end`, the evidence pack, the bad diff, the fix diff, and the proof result.
 
-## The demo app
+Results depend on how well the saved flow covers your app and on which check type fits the failure. Some failures only qualify for the smoke promotion, which is still a browser replay.
 
-`demo-app/` is one signup form: name, email, plan, a terms checkbox, and a Create account button. It ships clean, with two realistic bugs stored as patches:
-
-| Patch | The bug | Why code review misses it | Check Ratchet writes |
-|---|---|---|---|
-| `dropped-field.patch` | The handler reads `payload.planId` instead of `payload.plan`, so every Pro signup lands on Free | It looks like a harmless rename, and a silent fallback hides it | Unit test on `createAccount` |
-| `fake-disabled.patch` | The button gets a grey `is-disabled` class but is never actually disabled, so you can sign up without accepting the terms | It looks disabled in every screenshot | ESLint rule banning `classList.toggle('is-disabled')` |
+## Install
 
 ```bash
-npm run app                    # http://localhost:4310
-npm run plant:dropped-field    # or plant:fake-disabled
-npm run verify                 # watch Kane catch it
+git clone https://github.com/fozagtx/Rachet.git ratchet
+cd ratchet
+npm run setup
 ```
 
-## Setting up a new flow
+`npm run setup` runs `npm install`, installs `@testmuai/kane-cli@0.10.4` globally, and runs `kane-cli login`. Use `kane-cli login --oauth` for browser sign-in. Requires Node 20+, git, and Chrome.
 
-1. Add the flow to `.ratchet/config.json`: a `name`, an `objective` (one task, under about 15 steps), and the `paths` it covers.
-2. Author it on the **clean** app: `node bin/ratchet.js author <name>`. This saves `.testmuai/tests/<name>_test.md` and locks it.
-3. Commit the saved test and `.ratchet/flows.lock.json`.
+## Quick start
 
-## Project layout
+Full loop in a throwaway clone. The script applies a reverse patch in place of the agent's fix, so your checkout is not touched:
 
+```text
+bash scripts/demo.sh
 ```
-bin/ratchet.js          CLI entry
-src/run-kane.js         spawns kane-cli, parses NDJSON, returns a verdict
-src/verify.js           the Stop hook logic
-src/classify.js         maps a failure to the check it should write
-src/write-check.js      writes the unit test, lint rule, or smoke tag
-src/prove.js            puts the bad code back and shows the check rejecting it
-src/lock.js             receipt + commit
-src/store.js            reads and writes .ratchet/
-.claude/hooks/stop.sh   calls ratchet verify
-demo-app/               the app under test
+
+Real loop with an agent. Open the repo in Claude Code. The Stop hook is already registered in `.claude/settings.json`. Plant a bug, ask the agent for any change in `demo-app/`, and let it stop:
+
+```text
+npm run plant:dropped-field
 ```
+
+Manual run, no agent:
+
+```text
+npm run plant:dropped-field
+npm run verify
+```
+
+## Configure flows
+
+Flows live in `.ratchet/config.json`:
+
+```json
+{
+  "name": "signup",
+  "objective": "Open the signup page. Enter Ada Lovelace ... verify the welcome message says Ada Lovelace is on the Pro plan.",
+  "test": ".testmuai/tests/signup_test.md",
+  "paths": ["demo-app/"]
+}
+```
+
+- `name` must match `[A-Za-z0-9_-]+`. It becomes Kane's `--name`.
+- `objective` is one task, under about 15 steps.
+- `paths` decides which changes trigger this flow.
+- `handlers` (top level) lists functions that receive form data. Ratchet writes unit tests against these.
+- `lint.files` (top level) lists the directories the ESLint rules cover.
+
+Author each flow once, on the clean app:
+
+```text
+node bin/ratchet.js author signup
+node bin/ratchet.js author signup-terms
+```
+
+This saves `.testmuai/tests/<name>_test.md` and locks the objective and steps in `.ratchet/flows.lock.json`. Commit both. Later replays run from cache, with no model cost.
+
+## Check types
+
+- **Control looked disabled but still fired.** Writes an ESLint `no-restricted-syntax` rule built from the exact line the fix removed, into `eslint.config.js`.
+- **Server accepted the request but dropped a field.** Writes a unit test in `tests/ratchet/` that sends every form field through the handler and asserts each one is stored.
+- **Value sent empty or as the wrong type.** A narrower type check is planned and not built. Ratchet records the signal and moves on to the next check type.
+- **Anything else.** Adds the `smoke` tag to the saved Kane flow's frontmatter.
+
+The reason for each choice is recorded in `.ratchet/<bug-id>.json`.
+
+## Useful commands
+
+```text
+ratchet verify [--hook]   locked checks, then Kane on touched flows (what the hook runs)
+ratchet author <flow>     author a flow once with Kane and lock it
+ratchet lock              replay pending red flows, lock the ones now green
+ratchet prove [bug-id]    put the bad code back in a temp worktree, show the check blocks it
+ratchet check             run every locked check
+ratchet smoke             replay every smoke-tagged flow, healing off
+ratchet status            pending bugs and locked checks
+```
+
+Run them as `node bin/ratchet.js <command>`, or link the CLI with `npm link`.
+
+To open an evidence pack:
+
+```text
+kane-cli evidence serve .ratchet/evidence/<bug-id>.evidence
+```
+
+## Important limits
+
+- Ratchet never writes `AGENTS.md` or `CLAUDE.md`. When no deterministic check fits, it promotes the Kane flow to smoke. It never writes prose rules.
+- Replays always run with `--no-adaptive-heal`.
+- Locked checks only get stricter. Deleting or editing one blocks the stop.
+- A check is kept only if its proof holds. If it fails, Ratchet undoes the check and falls back to the smoke promotion.
+- Ratchet commits locally and never pushes or merges.
+- A flow that goes green with no code change is treated as flaky. No check is written.
+- Single repo, desktop web only. No dashboard and no mobile targets.
+
+## Demo app
+
+`demo-app/` is one signup form: name, email, plan, a terms checkbox, and a Create account button. It ships clean. Two bugs are stored as patches:
+
+- `dropped-field.patch`: the handler reads `payload.planId` instead of `payload.plan`, so every Pro signup lands on Free. Ratchet writes a unit test on `createAccount`.
+- `fake-disabled.patch`: the button gets a grey `is-disabled` class but is never disabled, so you can sign up without accepting the terms. Ratchet writes an ESLint rule.
+
+```text
+npm run app                    serves http://localhost:4310
+npm run plant:fake-disabled    applies the second bug
+```
+
+## Update
+
+The Kane version is pinned in `npm run setup` so a release mid-build cannot change behaviour. To upgrade, change the version there, reinstall, and re-author your flows if the saved test format changed.
+
+## Uninstall
+
+Remove the `Stop` entry from `.claude/settings.json` first, then delete the repo. `.ratchet/` receipts and the checks in `tests/ratchet/` and `eslint.config.js` stay in your git history.
 
 ## Development
 
 ```bash
-npm test
+npm install
+npm test        # unit tests for the classifier and check writer
+npm run lint    # runs the locked ESLint rules on demo-app/
 ```
-
-The test suite runs the whole loop in a throwaway git repo: red, fix, lock, prove, re-block, tamper detection, and the loop guard. In those tests, `test/fixtures/fake-kane.js` stands in for kane-cli. It follows Kane's contract (NDJSON ending in `run_end`, exit codes 0/1/2/3, a sealed `.evidence` file, `--name` saving a `_test.md`) and judges each flow by calling the running demo app. The product itself always calls the real `kane-cli`.
-
-## Out of scope
-
-Multiple repos, a web dashboard, mobile targets, auto merge, and auto push.

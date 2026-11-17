@@ -11,7 +11,7 @@ import { rel } from './store.js';
 
 const VERDICTS = { 0: 'pass', 1: 'fail', 2: 'not-started', 3: 'timeout' };
 
-export const kaneBin = () => process.env.RATCHET_KANE_BIN || 'kane-cli';
+export const kaneBin = () => 'kane-cli';
 
 // Replays always run with healing off, so a re-authored step can never turn a
 // real failure into a pass.
